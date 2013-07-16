@@ -18,7 +18,7 @@ int main(int argc, const char* argv[])
 @autoreleasepool {
    YAParser* parser = [[YAParser alloc] init];
    parser.versionTag = @"Version 0.42";
-   parser.authorTag = @"Report bugs to <GrouchoM@example.com>"
+   parser.authorTag = @"Report bugs to &#60;GrouchoM@example.com&#62;
 
   [parser createParseTreeFromFile:@"parser.json"];
 
