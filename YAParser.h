@@ -17,11 +17,13 @@
 @property (strong, readonly) NSDictionary* parseTree;
 
 - (id) init;
--(void) createParseTreeFromFile:(NSString*) jsonFile; 
+-(void) createParseTreeFromFile:(NSString*) jsonFile;
+-(void) createParseTreeFromString:(NSString*) jsonString;
 
--(NSString*) helpShortDescription; 
+
+-(NSString*) helpShortDescription;
 -(NSString*) usageDescription;
--(NSString*) helpDescription; 
+-(NSString*) helpDescription;
 
 -(NSDictionary*) parseCommandLine: (const char**) argv Count: (int) argc;
 

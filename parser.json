@@ -1,9 +1,10 @@
 {
-	"Doc":"myApp -- Something wonderful will happen.",
+	"Doc":"ParserExample -- Demonstration of parser class.",
 	"Argument":{"Argument":"INPUT", "Doc":"A short Description"},
 
 	"Options":[
 		{"Name":"outfile", "Key":"o", "Argument":"OUTFILE", "Doc":"Resulting output"}, 
-		{"Name":"withoutargument", "Key":"w", "Doc":"Option without argument."}
+		{"Name":"myarg", "Key":"m", "Argument":"ARGUE", "Doc":"Option with argument."},
+        {"Name":"without", "Key":"w", "Doc":"Option without argument."}
 	]
 }

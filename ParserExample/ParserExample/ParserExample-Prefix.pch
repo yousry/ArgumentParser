@@ -1,0 +1,7 @@
+//
+// Prefix header for all source files of the 'ParserExample' target in the 'ParserExample' project
+//
+
+#ifdef __OBJC__
+    #import <Foundation/Foundation.h>
+#endif

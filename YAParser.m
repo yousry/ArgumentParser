@@ -2,8 +2,8 @@
 //  YAParser.m
 //
 //  Created by Yousry Abdallah.
-//  Copyright 2013 yousry.de. All rights reserved.
-//  MIT License / see license.txt
+//  Copyright 2013 yousry.de.
+//  MIT License / see LICENSE
 
 #import <Foundation/NSJSONSerialization.h>
 
@@ -26,33 +26,48 @@
 
 #define MAX_OPT_PER_LINE 5
 
-static const NSString* TAG = @"YAParser";
-
 @implementation YAParser {
 	NSDictionary* argumentDictionary;
 	NSString* appName;
 	NSArray* parseOptions;
-} 
+}
 
 - (id) init;
 {
 	self = [super init];
-
+    
 	if(self) {
 		commandlineArguments = [[NSMutableDictionary alloc] init];
 		_versionTag = TAG_UNSET;
 		_authorTag = TAG_UNSET;
 	}
-
+    
 	return self;
 }
 
-- (void) createParseTreeFromFile:(NSString*) jsonFile 
+-(void) createParseTreeFromString:(NSString*) jsonString
 {
+    NSError *error;
+    
+    
+    NSData* iData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
+    argumentDictionary = [NSJSONSerialization JSONObjectWithData:iData options:NSJSONReadingMutableLeaves error:&error];
+    
+    if(error != nil) {
+    	NSLog(@"Parse error: %@", jsonString);
+        return;
+    }
+    
+    [self defaultOptions];
+    
+}
 
-NSError *error = nil;
-
-#ifdef __APPLE__	
+- (void) createParseTreeFromFile:(NSString*) jsonFile
+{
+    
+    NSError *error;
+    
+#ifdef __APPLE__
     NSInputStream* iStream = [[NSInputStream alloc] initWithFileAtPath:jsonFile];
 	[iStream open];
 	argumentDictionary = [NSJSONSerialization JSONObjectWithStream:iStream options:NSJSONReadingMutableLeaves error:&error];
@@ -61,15 +76,26 @@ NSError *error = nil;
 	NSData* iData = [NSData dataWithContentsOfFile:jsonFile];
     argumentDictionary = [NSJSONSerialization JSONObjectWithData:iData options:NSJSONReadingMutableLeaves error:&error];
 #endif
-
+    
     if(error != nil) {
     	NSLog(@"File not Found: %@", jsonFile);
         return;
     }
 
+[self defaultOptions];
+}
+
+-(void) defaultOptions
+{
 	parseOptions = [argumentDictionary objectForKey:TOKEN_OPTIONS];
+    
+#ifdef __APPLE__
+    appName = [[NSProcessInfo processInfo] processName];
+#else // __linux
     appName = NSBundle.mainBundle.bundlePath.lastPathComponent;
-} 
+#endif
+    
+}
 
 -(NSDictionary*) parseCommandLine: (const char**) argv Count: (int) argc;
 {
@@ -86,18 +112,24 @@ NSError *error = nil;
 		} else
 			return false;
 	};
-
-	NSMutableDictionary* result = [[NSMutableDictionary alloc] init]; 
-
+    
+	NSMutableDictionary* result = [[NSMutableDictionary alloc] init];
+    
 	for(int i = 1; i < argc; i++) {
-
-		NSString* const opt = [NSString stringWithCString:argv[i] encoding:NSString.defaultCStringEncoding]; 
+        
+		NSString* const opt = [NSString stringWithCString:argv[i] encoding:NSString.defaultCStringEncoding];
 		NSString* shortOpt = nil;
 		NSString* longOpt = nil;
-
-		if([opt hasPrefix:@"--"] && opt.length > 2)
-			longOpt = [opt substringFromIndex: 2];
-		else if([opt hasPrefix:@"-"] && opt.length > 1)
+        NSString* arg = nil;
+        
+		if([opt hasPrefix:@"--"] && opt.length > 2) {
+            NSArray *optAndVal = [opt componentsSeparatedByString:@"="];
+            if(optAndVal.count == 2) {
+                longOpt = [[optAndVal objectAtIndex:0] substringFromIndex: 2];
+                arg = [optAndVal objectAtIndex:1];
+            } else
+                longOpt = [opt substringFromIndex: 2];
+		} else if([opt hasPrefix:@"-"] && opt.length > 1)
  			shortOpt = [opt substringFromIndex: 1];
  		else { // The Argument
  			NSDictionary* argument = [argumentDictionary objectForKey:TOKEN_ARGUMENT];
@@ -107,49 +139,53 @@ NSError *error = nil;
 	 				[result setObject:opt forKey:argarg];
  			}
  		}
-
+        
 		if(shortOpt != nil || longOpt != nil) {
-			const bool isShortOpt = shortOpt != nil; 
-
+			const bool isShortOpt = shortOpt != nil;
+            
 			const bool needHelp = isShortOpt ? requestHelp(shortOpt) : requestHelp(longOpt);
 			if(needHelp)
 				return nil;
-
+            
 			for(NSDictionary* parseOption in parseOptions) {
-				NSString* const tokenName = [parseOption objectForKey:TOKEN_NAME]; 
+				NSString* const tokenName = [parseOption objectForKey:TOKEN_NAME];
 				if(( isShortOpt && [ [parseOption objectForKey:TOKEN_KEY] isEqualToString:shortOpt] ) ||
-				  ( !isShortOpt && [ tokenName isEqualToString:shortOpt] ) ) {
+                   ( !isShortOpt && [ tokenName isEqualToString:longOpt] ) ) {
 				 	bool hasArgument = [parseOption objectForKey:TOKEN_ARGUMENT] != nil;
-				 	NSString* arg = TOKEN_UNDEFINED;
-					if(hasArgument) {
-						if(i + 1 >= argc || [ [NSString stringWithCString:argv[i+1]] hasPrefix:@"-"]) {
+				 	
+					if(hasArgument && arg == nil) {
+						if(i + 1 >= argc || [ [NSString stringWithCString:argv[i+1] encoding:NSString.defaultCStringEncoding] hasPrefix:@"-"]) {
 							fprintf(stderr, "%s: option requires an argument -- %s\n", appName.UTF8String, opt.UTF8String);
 							fprintf(stdout, "%s\n", self.helpShortDescription.UTF8String);
 							return nil;
 						} else
-							arg = [NSString stringWithCString:argv[++i] encoding:NSString.defaultCStringEncoding]; 
-
+							arg = [NSString stringWithCString:argv[++i] encoding:NSString.defaultCStringEncoding];
+                        
 					}
-					[result setObject:arg forKey:tokenName];  
+                    
+                    if(arg == nil || !hasArgument)
+                        arg = TOKEN_UNDEFINED;
+                    
+					[result setObject:arg forKey:tokenName];
 				}
 			}
 		}
 	}
-
+    
 	return (NSDictionary*)[NSDictionary dictionaryWithDictionary: result];
 }
 
 
--(NSString*) helpShortDescription 
+-(NSString*) helpShortDescription
 {
 	NSDictionary* argument = [argumentDictionary objectForKey:TOKEN_ARGUMENT];
-	NSString* argarg =  [argument objectForKey:TOKEN_ARGUMENT]; 
-
+	NSString* argarg =  [argument objectForKey:TOKEN_ARGUMENT];
+    
 	NSString* usageString = [NSString stringWithFormat:
-@"\
-Usage: %@ [Option...] %@\n\
-Try ` %@ --help' or `%@ --usage' for more information.\
-" , appName, argarg, appName, appName]; 
+                             @"\
+                             Usage: %@ [Option...] %@\n\
+                             Try ` %@ --help' or `%@ --usage' for more information.\
+                             " , appName, argarg, appName, appName];
 	return usageString;
 }
 
@@ -163,21 +199,20 @@ Try ` %@ --help' or `%@ --usage' for more information.\
 			result = @"\n\t";
 		return result;
 	};
-
+    
 	NSString* shortKeys = @"";
     NSMutableArray* optArgs = [[NSMutableArray alloc] init];
     NSMutableArray* optArgsShort = [[NSMutableArray alloc] init];
-
+    
 	for(NSDictionary *parseOption in parseOptions) {
-
-
+        
 		NSString* optName = [parseOption objectForKey: TOKEN_NAME];
 		NSString* optArgument = [parseOption objectForKey: TOKEN_ARGUMENT];
 		NSString* optKey = [parseOption objectForKey: TOKEN_KEY];
-
+        
 		NSString* optArgString = nil;
 		NSString* optArgShortString = nil;
-
+        
 		if(optArgument == nil) {
 			shortKeys = [NSString stringWithFormat:@"%@%@", shortKeys, optKey]; // concat
 			optArgString = [NSString stringWithFormat:@"[--%@]", optName];
@@ -188,50 +223,50 @@ Try ` %@ --help' or `%@ --usage' for more information.\
 		}
 		[optArgs addObject: optArgString];
 	}
-
+    
 	NSString* result = [NSString stringWithFormat:@"Usage: %@",appName]; // concat
 	result = [NSString stringWithFormat:@"%@ [-%@u\?v]", result , shortKeys];
 	
-
-	for(NSString* optArgShort in optArgsShort) 
-		result = [NSString stringWithFormat:@"%@ %@", result, optArgShort, senseNL(MAX_OPT_PER_LINE)];
-
+    
+	for(NSString* optArgShort in optArgsShort)
+		result = [NSString stringWithFormat:@"%@ %@%@", result, optArgShort, senseNL(MAX_OPT_PER_LINE)];
+    
 	for(NSString* optArg in optArgs) {
-				result = [NSString stringWithFormat:@"%@ %@", result, optArg, senseNL(MAX_OPT_PER_LINE)];
+        result = [NSString stringWithFormat:@"%@ %@%@", result, optArg, senseNL(MAX_OPT_PER_LINE)];
 	}
-
+    
 	return result;
-} 
+}
 
--(NSString*) helpDescription 
+-(NSString*) helpDescription
 {
 	NSString* result = self.usageDescription;
 	result = [NSString stringWithFormat:@"%@\n%@\n", result, [argumentDictionary objectForKey:TOKEN_DOC] ];
-
+    
 	for(NSDictionary* parseOption in  parseOptions) {
 		NSString* optName = [parseOption objectForKey: TOKEN_NAME];
 		NSString* optArgument = [parseOption objectForKey: TOKEN_ARGUMENT];
 		NSString* optKey = [parseOption objectForKey: TOKEN_KEY];
 		NSString* optDoc = [parseOption objectForKey: TOKEN_DOC];
-
+        
 		NSString* lineResult = [NSString stringWithFormat:@"\n  -%@, --%@", optKey, optName]; // concat
-
-		if(optArgument!=nil)		
+        
+		if(optArgument!=nil)
 			lineResult = [NSString stringWithFormat:@"%@=%@", lineResult, optArgument];
-
+        
 		lineResult = [lineResult stringByPaddingToLength: 30 withString:@" " startingAtIndex:0];
-
+        
 		result = [result stringByAppendingString:lineResult];
 		result = [result stringByAppendingString:optDoc];
 	}
-
+    
 	result = [NSString stringWithFormat:@"%@\n  -?, --help                 Give this help list", result];
 	result = [NSString stringWithFormat:@"%@\n      --usage                Give a short usage message", result];
 	result = [NSString stringWithFormat:@"%@\n  -V, --version              Print program version", result];
-
+    
 	result = [result stringByAppendingString:
-		@"\n\nMandatory or optional arguments to long options are also mandatory or optional\nfor any corresponding short options.\n\n"];
-
+              @"\n\nMandatory or optional arguments to long options are also mandatory or optional\nfor any corresponding short options.\n\n"];
+    
 	result = [result stringByAppendingString:_authorTag];
 	return result;
 }	
