@@ -1,0 +1,9 @@
+{
+	"Doc":"myApp -- Something wonderful will happen.",
+	"Argument":{"Argument":"INPUT", "Doc":"A short Description"},
+
+	"Options":[
+		{"Name":"outfile", "Key":"o", "Argument":"OUTFILE", "Doc":"Resulting output"}, 
+		{"Name":"withoutargument", "Key":"w", "Doc":"Option without argument."}
+	]
+}
