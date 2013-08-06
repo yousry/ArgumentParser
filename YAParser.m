@@ -235,6 +235,12 @@
         result = [NSString stringWithFormat:@"%@ %@%@", result, optArg, senseNL(MAX_OPT_PER_LINE)];
 	}
     
+	NSDictionary* argument = [argumentDictionary objectForKey:TOKEN_ARGUMENT];
+	NSString* argarg =  [argument objectForKey:TOKEN_ARGUMENT];
+
+	if(argarg)
+	    result = [NSString stringWithFormat:@"%@ %@", result, argarg];
+	
 	return result;
 }
 
