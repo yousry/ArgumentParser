@@ -36,10 +36,10 @@ int main(int argc, const char * argv[])
         parser.versionTag = VERSION_TAG;
         parser.authorTag = AUTHOR_TAG;
         
-        // A stringyfied json parser
+        // Example of a json argument grammar
         [parser createParseTreeFromString:@"{\"Doc\":\"ParserExample -- Demonstration of parser class.\",\"Argument\":{\"Argument\":\"INPUT\",\"Doc\":\"A short Description\"},\"Options\":[{\"Name\":\"outfile\",\"Key\":\"o\",\"Argument\":\"OUTFILE\",\"Doc\":\"Resulting output\"},{\"Name\":\"myarg\",\"Key\":\"m\",\"Argument\":\"ARGUE\",\"Doc\":\"Option with argument.\"},{\"Name\":\"without\",\"Key\":\"w\",\"Doc\":\"Option without argument.\"}]}"];
 
-        // Parse the options
+        // Example of a json argument grammar
         NSDictionary* options = [parser parseCommandLine: argv Count: argc ];
         
         for(NSString *key in options.allKeys)
@@ -54,7 +54,7 @@ int main(int argc, const char * argv[])
     parser.setVersionTag(VERSION_TAG_C);
     parser.setAuthorTag(AUTHOR_TAG_C);
 
-    // A stringyfied json parser
+    // A stringyfied argument grammar
     parser.createParseTreeFromString("{\"Doc\":\"ParserExample -- Demonstration of parser class.\",\"Argument\":{\"Argument\":\"INPUT\",\"Doc\":\"A short Description\"},\"Options\":[{\"Name\":\"outfile\",\"Key\":\"o\",\"Argument\":\"OUTFILE\",\"Doc\":\"Resulting output\"},{\"Name\":\"myarg\",\"Key\":\"m\",\"Argument\":\"ARGUE\",\"Doc\":\"Option with argument.\"},{\"Name\":\"without\",\"Key\":\"w\",\"Doc\":\"Option without argument.\"}]}");
     
     auto options = parser.parseCommandLine(argv, argc);
