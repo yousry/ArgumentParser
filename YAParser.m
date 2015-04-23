@@ -38,7 +38,6 @@
 	self = [super init];
 
 	if(self) {
-		commandlineArguments = [[NSMutableDictionary alloc] init];
 		_versionTag = TAG_UNSET;
 		_authorTag = TAG_UNSET;
 	}

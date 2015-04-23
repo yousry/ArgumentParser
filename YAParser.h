@@ -7,9 +7,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface YAParser: NSObject {
-	NSMutableDictionary* commandlineArguments;
-}
+@interface YAParser: NSObject 
 
 @property (strong, readwrite) NSString* versionTag;
 @property (strong, readwrite) NSString* authorTag;
