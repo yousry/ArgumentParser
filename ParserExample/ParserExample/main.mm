@@ -22,7 +22,7 @@ using namespace std;
 #define VERSION_TAG_C "VERSION 0.42"
 #define AUTHOR_TAG_C "Report bugs to <GrouchoM@example.com> "
 
-// #define USE_OBJC
+//#define USE_OBJC
 #define USE_CXX
 
 int main(int argc, const char * argv[])

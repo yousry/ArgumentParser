@@ -325,7 +325,7 @@ std::map<std::string, std::string> FUParser::parseCommandLine(const char** argv,
                     if(arg.empty() || !hasArgument)
                         arg = TOKEN_UNDEFINED;
                     
-                    result[TOKEN_NAME] = arg;
+                    result[tokenName] = arg;
                 }
             }
         }
@@ -336,7 +336,7 @@ std::map<std::string, std::string> FUParser::parseCommandLine(const char** argv,
 
 void FUParser::defaultOptions()
 {
-    Value parseOptions = argumentDictionary[TOKEN_OPTIONS];
+    parseOptions = argumentDictionary[TOKEN_OPTIONS];
 }
 
 
