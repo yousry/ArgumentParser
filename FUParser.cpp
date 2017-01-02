@@ -12,6 +12,7 @@
 #include <fstream>
 #include <functional>
 #include <string>
+#include <algorithm>
 
 #include <json/config.h>
 #include <json/reader.h>
